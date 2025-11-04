@@ -33,6 +33,7 @@ The command python my_script.py is used to execute a Python program from the com
 First you need to treaning and create the template files:
 ```shell script
 python train_model.py
+python train_pneumonia_model.py
 ```
 After create scaler.pkl and diabetes_model.pkl files execute the command below:
 ```shell script
@@ -45,7 +46,7 @@ Open your browser and past the URL: http://127.0.0.1:8090
 On terminal, execute the code below
 ```shell script
 curl -X 'POST' \
-  'http://127.0.0.1:8090/Diabetes/' \
+  'http://127.0.0.1:8090/predictions/diabetes/' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -82,7 +83,7 @@ Open your browser and past the URL: http://127.0.0.1:8090
 On terminal, execute the code below
 ```shell script
 curl -X 'POST' \
-  'http://127.0.0.1:8090/Diabetes/' \
+  'http://127.0.0.1:8090/predictions/diabetes/' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
