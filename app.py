@@ -1,26 +1,25 @@
 
-import os
 # Biblioteca para criar aplicativos web e APIs
 from flask import Flask
 # Biblioteca para simplificar e acelerar a construção de APIs RESTful. Ele adiciona um conjunto de ferramentas e decoradores para ajudar a descrever e documentar a API de forma automática
 from flask_restx import Api, Resource, fields, reqparse
-
+# Biblioteca para representar e manipular arquivos enviados pelo cliente através de formulários HTTP
 from werkzeug.datastructures import FileStorage
-
+# Biblioteca para sanitizar nomes de arquivos enviados por usuários, garantindo a segurança contra ataques como o "traversal de diretório"
 from werkzeug.utils import secure_filename
 # Biblioteca para otimizar e acelerar fluxos de trabalho que envolvem tarefas computacionalmente intensivas
 import joblib
-
+# Biblioteca para carregar um modelo de aprendizado de máquina previamente treinado e salvo em disco
 from keras.models import load_model
-
-
+# Biblioteca para permitir que manipule imagens em seu código
 from PIL import Image
-
+# Biblioteca para lidar com os vários tipos de entrada/saída (I/O), como leitura e escrita de arquivos, manipulação de dados binários e uso de streams.
 import io
 # Biblioteca para trabalhar com arrays multidimensionais e matrizes de forma eficiente
 import numpy as np
 # Biblioteca para importar arquivos
 import pandas as pd
+# Biblioteca para executar servidores web WSGI (Web Server Gateway Interface) em Python
 from waitress import serve
 
 # Carregar modelo e scaler
@@ -59,6 +58,7 @@ pneumonia_prediction_model = api.model('PneumoniaPrediction', {
     'confidence': fields.String(required=True, description='Express the confidence')
 })
 
+# Define a model for request body
 upload_parser = reqparse.RequestParser()
 upload_parser.add_argument('file',
                           location='files',
@@ -88,46 +88,38 @@ class DiabetesResource(Resource):
         )
         features_scaled = scaler.transform(features)
         prediction = int(model.predict(features_scaled)[0])
-        # garantir tipos primitivos (não numpy) para serialização/ marshal
         probability = [float(p) for p in model.predict_proba(features_scaled)[0]]
         response_data = {
             'hasDiabetes': prediction == 1,
             'probability': f"{(probability[prediction] * 100):.2f}%"
         }
-        # Retornar dict e status — Flask-RESTX fará o marshal e a serialização
         return response_data, 200
 
 @ns.route('/pneumonia')
 class FileUpload(Resource):
-    """Handles file uploads and returns a JSON response."""
     @api.expect(upload_parser)
     @ns.marshal_with(pneumonia_prediction_model, code=200)
     def post(self):
-        """Uploads a file and processes it."""
+        """Uploads image containing lung."""
         args = upload_parser.parse_args()
         uploaded_file = args['file']
 
         if uploaded_file:
-            # For security, use secure_filename() to sanitize the filename
             filename = secure_filename(uploaded_file.filename)
             
             img = Image.open(io.BytesIO(uploaded_file.read())).convert("L")
             img = img.resize(IMG_SIZE)
             img_arr = np.expand_dims(np.array(img) / 255.0, axis=0)
 
-            # Fazer predição
             pred = pneumonia_model.predict(img_arr)[0][0]
             result = "NORMAL" if pred > 0.5 else "PNEUMONIA"
             confidence = f"{(float(pred if pred > 0.5 else 1 - pred) * 100):.2f}%"
             
-            # Return a JSON response with a success message
             return {
                 'result': result,
                 'confidence': confidence
-            }, 200 # HTTP status code for created
+            }, 200
         
-        # If no file is provided, an error will be returned automatically by the parser
-        # with an appropriate error message and status code (400 Bad Request).
         return {
             'message': 'File upload failed',
             'status': 'error'

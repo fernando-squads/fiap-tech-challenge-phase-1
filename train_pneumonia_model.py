@@ -26,7 +26,7 @@ def get_training_data(data_dir):
                 if img_arr is None:
                     print(f"⚠️ Erro ao ler imagem: {img_path}")
                     continue  # pula imagem inválida
-                resized_arr = cv2.resize(img_arr, (img_size, img_size)) # Reshaping images to preferred size
+                resized_arr = cv2.resize(img_arr, (img_size, img_size))
                 data.append([resized_arr, class_num])
             except Exception as e:
                 print(f"⚠️ Erro ao ler imagem: {img_path}", e)
